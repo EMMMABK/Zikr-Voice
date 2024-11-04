@@ -1,11 +1,17 @@
+import sounddevice as sd
+import numpy as np
 import speech_recognition as sr
 import tkinter as tk
 from threading import Thread
 
 # Функция для загрузки слов из файла
 def load_words(filename):
-    with open(filename, 'r', encoding='utf-8') as file:
-        return [line.strip().lower() for line in file.readlines()]
+    try:
+        with open(filename, 'r', encoding='utf-8') as file:
+            return [line.strip().lower() for line in file.readlines()]
+    except FileNotFoundError:
+        print(f"Файл '{filename}' не найден.")
+        return []
 
 # Загрузка мусульманских слов из файла
 all_words = load_words('words.txt')
@@ -14,27 +20,34 @@ count = 0
 # Функция для распознавания речи
 def listen():
     recognizer = sr.Recognizer()
-    with sr.Microphone() as source:
-        while True:
-            try:
-                print("Слушаю...")
-                audio = recognizer.listen(source)
-                text = recognizer.recognize_google(audio, language='ru-RU')
-                check_words(text.lower())
-            except sr.UnknownValueError:
-                continue
-            except sr.RequestError:
-                print("Ошибка сервиса распознавания.")
-                break
+    samplerate = 44100  # Частота дискретизации
+
+    while True:
+        try:
+            print("Слушаю...")
+            # Запись аудио с помощью sounddevice
+            audio_data = sd.rec(int(samplerate), samplerate=samplerate, channels=1, dtype='int16')
+            sd.wait()  # Ожидание завершения записи
+
+            # Преобразование в AudioData для распознавания
+            audio_data = sr.AudioData(audio_data.tobytes(), samplerate, 2)  
+            text = recognizer.recognize_google(audio_data, language='ru-RU')
+            check_words(text.lower())
+        except sr.UnknownValueError:
+            continue
+        except sr.RequestError:
+            print("Ошибка сервиса распознавания.")
+            break
+        except Exception as e:
+            print(f"Произошла ошибка: {e}")
 
 # Функция для проверки слов и обновления счётчика
 def check_words(text):
     global count
-    for word in all_words:
-        if word in text:
-            count += 1
-            update_count()
-            break  # Убедитесь, что каждое слово считается только один раз за одно произнесение
+    found_words = [word for word in all_words if word in text]
+    if found_words:
+        count += len(found_words)  # Увеличиваем счётчик на количество найденных слов
+        update_count()
 
 # Функция для обновления счётчика
 def update_count():
