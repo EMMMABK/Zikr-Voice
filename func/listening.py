@@ -1,68 +1,61 @@
+import json
 import speech_recognition as sr
 
-def count_zikr(text, zikr_words):
-    count = 0
-    for word in zikr_words:
-        count += text.lower().count(word.lower())
-    return count
+# Load the JSON data from the file
+with open('surahs.json', 'r', encoding='utf-8') as f:
+    data = json.load(f)
 
-# Задать список зикров
-zikr_words = ["субхан Аллах", "альхамдулиллах", "Аллаху Акбар", "ла илаха илля Аллах"]
-
-# Инициализировать распознаватель речи
-recognizer = sr.Recognizer()
-
-def start_recording():
+def listen_command():
+    recognizer = sr.Recognizer()
     with sr.Microphone() as source:
-        print("Пожалуйста, говорите...")
+        print("Listening...")
         audio = recognizer.listen(source)
-        print("Запись завершена.")
-
-    # Попробовать распознать речь
-    try:
-        text = recognizer.recognize_google(audio, language='ru-RU')
-        print(f"Распознанный текст: {text}")
-
-        # Сохранить текст в файл
-        with open('words.txt', 'a', encoding='utf-8') as file:
-            file.write(text + '\n')
-
-        # Подсчитать и вывести количество зикров
-        total_zikr = count_zikr(text, zikr_words)
-        print(f"Количество зикров: {total_zikr}")
-
-    except sr.UnknownValueError:
-        print("Не удалось распознать речь.")
-    except sr.RequestError as e:
-        print(f"Ошибка сервиса распознавания: {e}")
-
-def listen_for_commands():
-    with sr.Microphone() as source:
-        print("Пожалуйста, говорите команду (старт/стоп)...")
-        audio = recognizer.listen(source)
-
-    # Попробовать распознать речь
-    try:
-        command = recognizer.recognize_google(audio, language='ru-RU').strip().lower()
-        print(f"Распознанная команда: {command}")
-        return command
-    except sr.UnknownValueError:
-        print("Не удалось распознать команду.")
-        return None
-    except sr.RequestError as e:
-        print(f"Ошибка сервиса распознавания: {e}")
-        return None
+        try:
+            command = recognizer.recognize_google(audio, language='en-US')
+            print(f"You said: {command}")
+            return command.lower()
+        except sr.UnknownValueError:
+            print("Sorry, I could not understand the audio.")
+            return ""
+        except sr.RequestError:
+            print("Could not request results from the speech recognition service.")
+            return ""
 
 def main():
-    while True:
-        command = listen_for_commands()
-        if command == "старт":
-            start_recording()
-        elif command == "стоп":
-            print("Остановка записи.")
-            break
-        else:
-            print("Неизвестная команда. Пожалуйста, используйте 'старт' или 'стоп'.")
+    zikr_count = 0
+    print("Say 'START' to begin.")
+    command = listen_command()
+
+    if command == 'start':
+        print("Would you like to count a zikr or retrieve a surah? Say 'dhikr' or 'sura'.")
+        command = listen_command()
+
+        if command == 'dhikr':
+            print("Please say a zikr from the list:")
+            print(", ".join(data['zikrs']))
+            zikr_to_count = listen_command()
+
+            if zikr_to_count in data['zikrs']:
+                print(f"Counting occurrences of '{zikr_to_count}'. Say 'STOP' to end.")
+                while True:
+                    command = listen_command()
+                    if command == 'stop':
+                        break
+                    elif command == zikr_to_count:
+                        zikr_count += 1
+                        print(f"Count of '{zikr_to_count}': {zikr_count}")
+            else:
+                print("The zikr you mentioned is not in the list.")
+
+        elif command == 'sura':
+            print("Please say the name of the Surah.")
+            surah_name = listen_command()
+
+            if surah_name in data['surahs']:
+                print(f"Content of Surah {surah_name}:")
+                print(data['surahs'][surah_name]['content'])
+            else:
+                print("The Surah you mentioned is not in the list.")
 
 if __name__ == "__main__":
     main()
