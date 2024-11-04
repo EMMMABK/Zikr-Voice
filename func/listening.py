@@ -5,14 +5,25 @@ import os
 # Print the current working directory
 print("Current working directory:", os.getcwd())
 
+# Specify the path to your JSON file
+json_file_path = 'surahs.json'  # Adjust this path if necessary
+print("Trying to open:", os.path.abspath(json_file_path))
+
 # Check if the JSON file exists
-if not os.path.isfile('json/surahs.json'):
-    print("Error: The file 'json/surahs.json' does not exist.")
+if not os.path.isfile(json_file_path):
+    print(f"Error: The file '{json_file_path}' does not exist.")
     exit()
 
 # Load the JSON data from the file located in the 'json' folder
-with open('json/surahs.json', 'r', encoding='utf-8') as f:
-    data = json.load(f)
+try:
+    with open(json_file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+        print("File content before loading as JSON:")
+        print(content)  # Print the content for debugging
+        data = json.loads(content)  # Using json.loads instead of json.load
+except json.JSONDecodeError as e:
+    print(f"Error decoding JSON: {e}")
+    exit()
 
 def listen_command():
     recognizer = sr.Recognizer()
