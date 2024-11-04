@@ -1,8 +1,17 @@
 import json
 import speech_recognition as sr
+import os
 
-# Load the JSON data from the file
-with open('surahs.json', 'r', encoding='utf-8') as f:
+# Print the current working directory
+print("Current working directory:", os.getcwd())
+
+# Check if the JSON file exists
+if not os.path.isfile('json/surahs.json'):
+    print("Error: The file 'json/surahs.json' does not exist.")
+    exit()
+
+# Load the JSON data from the file located in the 'json' folder
+with open('json/surahs.json', 'r', encoding='utf-8') as f:
     data = json.load(f)
 
 def listen_command():
