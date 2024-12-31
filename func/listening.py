@@ -1,66 +1,39 @@
 import speech_recognition as sr
 
-# Define the zikrs and the content of the sura
-zikrs = ['alhamdulillah', 'subhanallah', 'allahu akbar']
-sura_content = "Bismillahir-Rahmanir-Rahim. Alhamdu lillahi Rabbil 'alamin. Ar-Rahmanir-Rahim. Maliki yawmid-Din. Iyyaka na'budu wa iyyaka nasta'in. Ihdinas-siratal-mustaqim. Siratal-ladhina an'amta 'alayhim, ghayril-maghbubi 'alayhim wa lad-Dallin."
+# Хранилище для зикров
+zikr_list = ["Аллаху Акбар", "Субханаллах", "Альхамдулиллах"]
 
-# Initialize counters
-zikr_count = 0
-sura_count = 0
+# Переменные для состояния и счётчика
+zikr_counter = 0
+is_running = False
 
-# Function to recognize speech
-def recognize_speech():
+def recognize_zikr():
+    global zikr_counter, is_running
     recognizer = sr.Recognizer()
-    with sr.Microphone() as source:
-        print("Listening...")
-        audio = recognizer.listen(source)
-        try:
-            text = recognizer.recognize_google(audio).lower()
-            return text
-        except sr.UnknownValueError:
-            print("Sorry, I could not understand the audio.")
-            return None
-        except sr.RequestError:
-            print("Could not request results from Google Speech Recognition service.")
-            return None
+    mic = sr.Microphone()
 
-# Main loop
-while True:
-    command = recognize_speech()
-    
-    if command == "stop":
-        print("Program stopped.")
-        break
-    
-    if command == "start":
-        print("You said 'Start'.")
-        
-        while True:
-            choice = recognize_speech()
-            
-            if choice == "zikrs":
-                print("You chose 'zikrs'.")
-                while True:
-                    zikr = recognize_speech()
-                    if zikr in zikrs:
-                        zikr_count += 1
-                        print(f"Zikr counted! Total Zikrs: {zikr_count}")
-                    else:
-                        print("Not a recognized zikr. Try again.")
-            
-            elif choice == "sura":
-                print("You chose 'sura'. Please say the name of the sura.")
-                sura_name = recognize_speech()
-                print("Now say the content of the sura.")
-                content = recognize_speech()
-                if content == sura_content.lower():
-                    sura_count += 1
-                    print(f"Sura counted! Total Suras: {sura_count}")
-                else:
-                    print("The content does not match the sura.")
-                    
-            elif choice == "stop":
-                print("Stopping the counting process.")
-                break
-            else:
-                print("Invalid option. Please say 'zikrs' or 'sura'.")
+    print("Ожидание произношения зикра...")
+
+    try:
+        with mic as source:
+            recognizer.adjust_for_ambient_noise(source)
+            while True:
+                print("Говорите...")
+                audio = recognizer.listen(source)
+                text = recognizer.recognize_google(audio, language='ru').upper()
+
+                if text == "ЗИКР СТАРТ":
+                    zikr_counter = 0
+                    is_running = True
+                    print("Счётчик запущен.")
+                elif text == "ЗИКР СТОП":
+                    is_running = False
+                    print(f"Счётчик остановлен. Итоговое количество: {zikr_counter}")
+                elif is_running and text in zikr_list:
+                    zikr_counter += 1
+                    print(f"Зикр: {text}. Счётчик: {zikr_counter}")
+    except Exception as e:
+        print(f"Ошибка: {str(e)}")
+
+# Основной цикл для обработки команд
+recognize_zikr()
