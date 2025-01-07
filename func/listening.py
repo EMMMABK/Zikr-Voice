@@ -1,8 +1,8 @@
 import speech_recognition as sr
 
 # Хранилище для зикров
-zikr_list = ["АЛЛАХУ АКБАР", "СУБХАНАЛЛАХ", "АЛЬХАМДУЛИЛЛАХ"]
-arabic_zikr_list = ["اللّهُ أَكْبَر", "سُبْحَانَ اللّه", "الحَمْدُ لِلّه"]
+zikr_list = ZIKR_LIST
+arabic_zikr_list = ZIKR_LIST_ARAB
 
 # Переменные для состояния и счётчика
 zikr_counter = {}
